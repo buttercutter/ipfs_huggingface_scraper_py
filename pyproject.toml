@@ -8,7 +8,7 @@ version = "0.0.3"
 authors = [
   { name="Benjamin Barber", email="starworks5@gmail.com" },
 ]
-description = "A wrapper around huggingface datasets, invoking an IPFS model manager."
+description = "A scraper of huggingface repositories, invoking an IPFS model manager."
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
