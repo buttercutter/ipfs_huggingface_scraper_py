@@ -1,0 +1,1 @@
+"""Examples for the ipfs_huggingface_scraper_py module."""

@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ipfs_huggingface_scraper_py"
-version = "0.0.3"
+version = "0.1.0"
 authors = [
   { name="Benjamin Barber", email="starworks5@gmail.com" },
 ]
-description = "A scraper of huggingface repositories, invoking an IPFS model manager."
+description = "A specialized module for scraping and processing model metadata from HuggingFace Hub with IPFS integration."
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [

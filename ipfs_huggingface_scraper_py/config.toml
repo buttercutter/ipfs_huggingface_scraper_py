@@ -1,0 +1,55 @@
+# HuggingFace Scraper Configuration
+
+# Scraper settings
+[scraper]
+output_dir = "hf_model_data"         # Directory to save scraped data
+max_models = 100                      # Maximum models to scrape (null for no limit)
+save_metadata = true                  # Whether to save model metadata
+filename_to_download = "config.json"  # Specific file to download from each model
+batch_size = 100                      # Number of models to process in each batch
+skip_existing = true                  # Skip already processed models
+retry_delay_seconds = 5               # Delay before retrying failed downloads
+max_retries = 2                       # Maximum retries for failed operations
+log_level = "INFO"                    # Logging level (INFO, DEBUG, WARNING, ERROR)
+metadata_fields = [                   # Metadata fields to extract
+    "id", 
+    "modelId", 
+    "sha", 
+    "lastModified", 
+    "tags", 
+    "pipeline_tag", 
+    "siblings", 
+    "config"
+]
+
+# API settings
+[api]
+base_url = "https://huggingface.co"                # Base URL for HuggingFace API
+api_token = ""                                     # API token (leave empty for anonymous)
+authenticated = false                              # Whether to use authentication
+anonymous_rate_limit = 5.0                         # Requests per second for anonymous
+authenticated_rate_limit = 10.0                    # Requests per second for authenticated
+daily_anonymous_quota = 300000                     # Daily quota for anonymous (300K)
+daily_authenticated_quota = 1000000                # Daily quota for authenticated (1M)
+max_retries = 5                                    # Maximum retries for rate limit errors
+timeout = 30                                       # Request timeout in seconds
+
+# Storage settings
+[storage]
+use_ipfs = true                                    # Whether to use IPFS storage
+local_cache_max_size_gb = 10                       # Maximum local cache size in GB
+local_cache_retention_days = 30                    # Days to retain files in local cache
+metadata_format = "parquet"                        # Metadata storage format (json, parquet)
+
+# IPFS add options
+[storage.ipfs_add_options]
+pin = true                                         # Whether to pin files in IPFS
+wrap_with_directory = true                         # Wrap content in directory
+chunker = "size-262144"                            # Chunking strategy
+hash = "sha2-256"                                  # Hash algorithm
+
+# State management settings
+[state]
+state_dir = ".scraper_state"                       # Directory for state files
+checkpoint_interval = 50                           # Create checkpoint every N models
+auto_resume = true                                 # Automatically resume interrupted operations
