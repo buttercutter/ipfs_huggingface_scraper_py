@@ -13,8 +13,8 @@ python -m test.test
 To run a specific test:
 
 ```bash
-python -m test.test_state_manager
-python -m test.test_rate_limiter
+python -m test.test test/test_config.py
+python -m test.test test/test_datasets_scraper.py
 ```
 
 ## Test Organization
@@ -24,19 +24,45 @@ The tests are organized into the following categories:
 - **Unit Tests**: Testing individual components in isolation
 - **Integration Tests**: Testing interactions between components
 - **Functional Tests**: Testing end-to-end functionality
+- **Entity Tests**: Testing different entity types (models, datasets, spaces)
 
 ## Test Files
 
+Core components:
 - `test_state_manager.py`: Tests for the state management system
 - `test_rate_limiter.py`: Tests for the rate limiter component
 - `test_ipfs_integration.py`: Tests for IPFS integration (requires IPFS daemon)
-- `test_enhanced_scraper.py`: Tests for the enhanced scraper (in progress)
-- `test_config.py`: Tests for the configuration system (in progress)
-- `test_cli.py`: Tests for the command-line interface (in progress)
+- `test_enhanced_scraper.py`: Tests for the enhanced model scraper
+- `test_config.py`: Tests for the configuration system
+- `test_cli.py`: Tests for the command-line interface
+
+Entity types:
+- `test_datasets_scraper.py`: Tests for the datasets scraper
+- `test_spaces_scraper.py`: Tests for the spaces scraper
+- `test_provenance.py`: Tests for the provenance tracking system
+
+## New Entity Tests
+
+To run tests for the new entity types and provenance tracking:
+
+```bash
+python -m test.test test/test_datasets_scraper.py
+python -m test.test test/test_spaces_scraper.py
+python -m test.test test/test_provenance.py
+```
 
 ## Mock Tests
 
-For HuggingFace API tests, we use mocked responses to avoid excessive API calls during testing.
+For HuggingFace API tests, we use mocked responses to avoid excessive API calls during testing:
+
+```python
+@patch("ipfs_huggingface_scraper_py.datasets.datasets_scraper.list_datasets")
+def test_discover_datasets(self, mock_list_datasets):
+    # Set up mock
+    mock_list_datasets.return_value = [mock_dataset1, mock_dataset2]
+    
+    # Test code here
+```
 
 ## Writing Tests
 
@@ -48,10 +74,10 @@ When writing new tests, follow these guidelines:
 4. Include both positive and negative test cases
 5. Test error handling and edge cases
 
-## Test Development
+## Test Results
 
-The project follows a test-first development approach:
+Test results are saved to `test_results.json` with summary statistics about test execution.
 
-1. Write tests for new functionality first
-2. Implement the minimum code required to pass the tests
-3. Refactor and optimize while keeping tests passing
+## Documentation
+
+See `TEST_SUMMARY.md` for a comprehensive overview of the test suite.

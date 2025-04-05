@@ -1,15 +1,15 @@
 # IPFS HuggingFace Scraper
 
-A specialized module for scraping and processing model metadata from HuggingFace Hub with robust IPFS integration.
+A specialized module for scraping and processing content from HuggingFace Hub, including models, datasets, and spaces. This tool stores the metadata and content in content-addressable storage via IPFS.
 
 ## Features
 
-- Discovers and scrapes model metadata from HuggingFace
-- Processes and structures this metadata into appropriate formats (JSON, Parquet)
-- Stores the metadata and model files in content-addressable storage via IPFS
-- Provides robust state management for resumable operations
-- Implements rate limiting with adaptive backoff for API quotas
-- Supports concurrent processing for improved performance
+- **Multiple Content Type Support**: Scrape models, datasets, and spaces from HuggingFace Hub
+- **Robust State Management**: Resume interrupted scraping operations seamlessly
+- **Rate Limiting**: Adaptive rate limiting to respect API quotas
+- **IPFS Integration**: Store content in distributed IPFS storage
+- **Provenance Tracking**: Track relationships and lineage between entities
+- **Metadata Extraction**: Extract rich metadata from all entity types
 
 ## Installation
 
@@ -17,141 +17,158 @@ A specialized module for scraping and processing model metadata from HuggingFace
 pip install ipfs_huggingface_scraper_py
 ```
 
-## Quick Start
+## Dependencies
 
-### Command Line Usage
+The scraper depends on the following core modules:
+- `ipfs_datasets_py`: For dataset operations
+- `ipfs_kit_py`: For IPFS interaction
+- `huggingface_hub`: For interacting with the HuggingFace Hub API
+
+## Usage
+
+### Command Line Interface
 
 ```bash
-# Initialize a configuration file
-hf-scraper init --output config.toml
+# Scrape models
+hf-scraper models --max 100 --output-dir ./hf_data
 
-# Edit the configuration file as needed
+# Scrape datasets
+hf-scraper datasets --max 50 --output-dir ./hf_data
 
-# Start scraping
-hf-scraper scrape --config config.toml --max-models 100
+# Scrape spaces
+hf-scraper spaces --max 25 --output-dir ./hf_data
 
-# Resume a paused scraping operation
-hf-scraper resume --config config.toml
+# Scrape all entity types
+hf-scraper all --max-models 100 --max-datasets 50 --max-spaces 25 --output-dir ./hf_data
 
-# Check scraping status
-hf-scraper status --config config.toml
+# Export configuration template
+hf-scraper export-config --output config_template.toml
 ```
 
-### Python API Usage
+### Python API
 
 ```python
-from ipfs_huggingface_scraper_py import EnhancedScraper, Config
+from ipfs_huggingface_scraper_py import EnhancedScraper, DatasetsScraper, SpacesScraper
 
-# Create configuration
-config = Config()
-config.set("scraper", "max_models", 100)
-config.set("scraper", "output_dir", "hf_data")
-config.save("config.toml")
+# Scrape models
+models_scraper = EnhancedScraper()
+models_scraper.scrape_models(max_models=100)
 
-# Create and run scraper
-scraper = EnhancedScraper("config.toml")
-scraper.scrape_models()
+# Scrape datasets
+datasets_scraper = DatasetsScraper()
+datasets_scraper.scrape_datasets(max_datasets=50)
 
-# Resume a paused scraping operation
-scraper.resume()
+# Scrape spaces
+spaces_scraper = SpacesScraper()
+spaces_scraper.scrape_spaces(max_spaces=25)
+
+# Track provenance
+from ipfs_huggingface_scraper_py import ProvenanceTracker
+tracker = ProvenanceTracker("./provenance_data")
+tracker.add_model_base_relationship("distilbert-base-uncased-finetuned-sst-2-english", "distilbert-base-uncased")
 ```
-
-## Components
-
-The scraper consists of several key components:
-
-1. **Model Discovery Service**
-   - Finds and enumerates models on HuggingFace Hub
-   - Implements paginated listing of models
-   - Filters models based on configurable criteria
-
-2. **Metadata Collector**
-   - Retrieves detailed metadata for each model
-   - Extracts information from model cards, config files, etc.
-   - Normalizes metadata into consistent format
-
-3. **State Manager**
-   - Tracks overall scraping progress
-   - Maintains persistent state for resumable operations
-   - Records success/failure status of individual operations
-
-4. **Rate Limiter**
-   - Enforces HuggingFace API rate limits
-   - Implements adaptive backoff strategies
-   - Provides quota management across distributed scrapers
-
-5. **IPFS Storage**
-   - Interfaces with IPFS via ipfs_kit_py
-   - Manages content-addressed storage of metadata and files
-   - Handles efficient conversion between formats
 
 ## Configuration
 
-The scraper is highly configurable through a TOML configuration file. Main configuration sections:
+The scraper can be configured via a TOML file. You can generate a template configuration file with:
 
-### Scraper Settings
+```bash
+hf-scraper export-config --output config.toml
+```
+
+Key configuration sections include:
+
+### Scraper Configuration
 
 ```toml
 [scraper]
+# Output directory for scraped data
 output_dir = "hf_model_data"
+
+# Maximum number of entities to scrape (None means unlimited)
 max_models = 100
+max_datasets = 50
+max_spaces = 25
+
+# Entity types to scrape (can include "models", "datasets", "spaces")
+entity_types = ["models", "datasets", "spaces"]
+
+# Track provenance information between entities
+track_provenance = true
+
+# Save metadata for each entity
 save_metadata = true
+
+# File to download for models (usually config.json)
 filename_to_download = "config.json"
+
+# Maximum rows for dataset preview
+dataset_preview_max_rows = 100
+
+# Batch size for processing entities
 batch_size = 100
+
+# Skip entities that have already been processed
 skip_existing = true
-retry_delay_seconds = 5
-max_retries = 2
-log_level = "INFO"
 ```
 
-### API Settings
+### API Configuration
 
 ```toml
 [api]
+# Base URL for the HuggingFace API
 base_url = "https://huggingface.co"
-api_token = ""
-authenticated = false
-anonymous_rate_limit = 5.0
-authenticated_rate_limit = 10.0
-daily_anonymous_quota = 300000
-daily_authenticated_quota = 1000000
-max_retries = 5
-timeout = 30
+
+# API token for authentication (more rate limits with authentication)
+api_token = null
+
+# Rate limits
+anonymous_rate_limit = 5.0  # requests per second
+authenticated_rate_limit = 10.0  # requests per second
 ```
 
-### Storage Settings
+### Storage Configuration
 
 ```toml
 [storage]
+# Use IPFS for storage
 use_ipfs = true
+
+# IPFS add options
+ipfs_add_options = { pin = true, wrap_with_directory = true }
+
+# Local cache settings
 local_cache_max_size_gb = 10
 local_cache_retention_days = 30
-metadata_format = "parquet"
 
-[storage.ipfs_add_options]
-pin = true
-wrap_with_directory = true
-chunker = "size-262144"
-hash = "sha2-256"
+# Enable knowledge graph for storing relationships
+enable_knowledge_graph = true
 ```
 
-### State Management
+### Provenance Configuration
 
 ```toml
-[state]
-state_dir = ".scraper_state"
-checkpoint_interval = 50
-auto_resume = true
+[provenance]
+# Extract base model information
+extract_base_models = true
+
+# Extract dataset relationships
+extract_dataset_relationships = true
+
+# Extract evaluation dataset information
+extract_evaluation_datasets = true
+
+# Track entity version history
+track_version_history = true
+
+# Maximum depth for relationship traversal
+max_relationship_depth = 3
 ```
 
-## Dependencies
+## Contributing
 
-This module integrates with several other components:
-
-- **ipfs_datasets_py**: Provides dataset management, conversion, and GraphRAG capabilities
-- **ipfs_kit_py**: Handles low-level IPFS operations and integration
-- **ipfs_model_manager_py**: Manages model deployment and serving
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-GNU Affero General Public License v3 or later (AGPLv3+)
+[GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)

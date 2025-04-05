@@ -60,10 +60,8 @@ class EnhancedScraper:
         self.ipfs_storage = IpfsStorage(storage_config)
         
         # Initialize HuggingFace client
-        self.hf_client = HfApi(
-            token=api_config["api_token"],
-            timeout=api_config["timeout"]
-        )
+        self.hf_client = HfApi(token=api_config["api_token"])
+        # Timeout will be handled by the rate limiter
         
         # Configure for resumable operation
         if state_config["auto_resume"] and not self.state_manager.is_completed():

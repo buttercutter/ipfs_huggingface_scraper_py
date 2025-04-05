@@ -9,8 +9,13 @@ DEFAULT_CONFIG = {
     "scraper": {
         "output_dir": "hf_model_data",
         "max_models": None,  # None means no limit
+        "max_datasets": None,  # None means no limit
+        "max_spaces": None,  # None means no limit
+        "entity_types": ["models"],  # Can include "models", "datasets", "spaces"
+        "track_provenance": True,  # Track provenance information between entities
         "save_metadata": True,
         "filename_to_download": "config.json",
+        "dataset_preview_max_rows": 100,  # Max rows for dataset preview
         "batch_size": 100,
         "skip_existing": True,
         "retry_delay_seconds": 5,
@@ -43,12 +48,20 @@ DEFAULT_CONFIG = {
         "local_cache_max_size_gb": 10,
         "local_cache_retention_days": 30,
         "metadata_format": "parquet",  # Options: json, parquet
+        "enable_knowledge_graph": True,  # Store relationships in knowledge graph
     },
     "state": {
         "state_dir": ".scraper_state",
-        "checkpoint_interval": 50,  # Save checkpoint every N models
+        "checkpoint_interval": 50,  # Save checkpoint every N entities
         "auto_resume": True,
     },
+    "provenance": {
+        "extract_base_models": True,  # Extract base model information
+        "extract_dataset_relationships": True,  # Extract dataset relationships
+        "extract_evaluation_datasets": True,  # Extract evaluation dataset information
+        "track_version_history": True,  # Track entity version history
+        "max_relationship_depth": 3,  # Maximum depth for relationship traversal
+    }
 }
 
 class Config:

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ipfs_huggingface_scraper_py',
-    version='0.1.0',
+    version='0.2.0',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
@@ -17,6 +17,7 @@ setup(
         "urllib3",
         "requests",
         "boto3",
+        "networkx>=3.0.0",  # For provenance graph processing
     ],
     entry_points={
         'console_scripts': [
@@ -24,15 +25,17 @@ setup(
         ],
     },
     python_requires='>=3.7',
-    description='A specialized module for scraping and processing model metadata from HuggingFace Hub',
+    description='A specialized module for scraping and processing models, datasets, and spaces from HuggingFace Hub',
     author='IPFS HuggingFace Scraper Team',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU Affero General Public License v3',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
     ],
 )

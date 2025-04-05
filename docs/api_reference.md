@@ -6,7 +6,7 @@ This document provides a comprehensive reference for the IPFS HuggingFace Scrape
 
 ### Enhanced Scraper
 
-The main scraper class that orchestrates the entire scraping process.
+The main scraper class for models from HuggingFace Hub.
 
 ```python
 from ipfs_huggingface_scraper_py import EnhancedScraper
@@ -30,7 +30,7 @@ EnhancedScraper(config_path=None)
 scrape_models(max_models=None)
 ```
 
-Start the scraping process.
+Start the model scraping process.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
@@ -61,6 +61,116 @@ scraper = EnhancedScraper()
 
 # Start scraping with max 100 models
 scraper.scrape_models(max_models=100)
+
+# Resume a paused operation
+scraper.resume()
+```
+
+### DatasetsScraper
+
+Scraper class for datasets from HuggingFace Hub.
+
+```python
+from ipfs_huggingface_scraper_py import DatasetsScraper
+```
+
+#### Constructor
+
+```python
+DatasetsScraper(config_path=None)
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `config_path` | `str` or `None` | Path to the configuration file. If None, uses default config. |
+
+#### Methods
+
+##### `scrape_datasets`
+
+```python
+scrape_datasets(max_datasets=None)
+```
+
+Start the dataset scraping process.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `max_datasets` | `int` or `None` | Maximum number of datasets to scrape. If provided, overrides the config value. |
+
+##### `resume`
+
+```python
+resume()
+```
+
+Resume a paused dataset scraping operation.
+
+#### Example
+
+```python
+from ipfs_huggingface_scraper_py import DatasetsScraper
+
+# Create with default config
+scraper = DatasetsScraper()
+
+# Start scraping with max 50 datasets
+scraper.scrape_datasets(max_datasets=50)
+
+# Resume a paused operation
+scraper.resume()
+```
+
+### SpacesScraper
+
+Scraper class for spaces from HuggingFace Hub.
+
+```python
+from ipfs_huggingface_scraper_py import SpacesScraper
+```
+
+#### Constructor
+
+```python
+SpacesScraper(config_path=None)
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `config_path` | `str` or `None` | Path to the configuration file. If None, uses default config. |
+
+#### Methods
+
+##### `scrape_spaces`
+
+```python
+scrape_spaces(max_spaces=None)
+```
+
+Start the spaces scraping process.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `max_spaces` | `int` or `None` | Maximum number of spaces to scrape. If provided, overrides the config value. |
+
+##### `resume`
+
+```python
+resume()
+```
+
+Resume a paused spaces scraping operation.
+
+#### Example
+
+```python
+from ipfs_huggingface_scraper_py import SpacesScraper
+
+# Create with default config
+scraper = SpacesScraper()
+
+# Start scraping with max 25 spaces
+scraper.scrape_spaces(max_spaces=25)
 
 # Resume a paused operation
 scraper.resume()
@@ -158,13 +268,18 @@ from ipfs_huggingface_scraper_py import Config
 # Create a new config
 config = Config()
 
-# Set values
+# Set values for different entity types
+config.set('scraper', 'entity_types', ['models', 'datasets', 'spaces'])
 config.set('scraper', 'max_models', 100)
+config.set('scraper', 'max_datasets', 50)
+config.set('scraper', 'max_spaces', 25)
+config.set('scraper', 'track_provenance', True)
 config.set('api', 'authenticated', True)
+config.set('storage', 'enable_knowledge_graph', True)
 
 # Get values
-max_models = config.get('scraper', 'max_models')
-is_authenticated = config.get('api', 'authenticated')
+entity_types = config.get('scraper', 'entity_types')
+max_datasets = config.get('scraper', 'max_datasets')
 
 # Save config
 config.save('my_config.toml')
@@ -703,6 +818,314 @@ if storage.is_ipfs_available():
     dir_cid = storage.store_model_files("path/to/model_dir")
 ```
 
+## ProvenanceTracker
+
+Tracks and manages provenance relationships between entities.
+
+```python
+from ipfs_huggingface_scraper_py import ProvenanceTracker
+```
+
+### Constructor
+
+```python
+ProvenanceTracker(storage_dir)
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `storage_dir` | `str` | Directory for storing provenance information |
+
+### Methods
+
+#### `add_model_base_relationship`
+
+```python
+add_model_base_relationship(model_id, base_model_id)
+```
+
+Add a relationship indicating a model is derived from a base model.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `model_id` | `str` | ID of the derived model |
+| `base_model_id` | `str` | ID of the base model |
+
+#### `add_model_dataset_relationship`
+
+```python
+add_model_dataset_relationship(model_id, dataset_id, relationship_type="trained_on")
+```
+
+Add a relationship between a model and a dataset.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `model_id` | `str` | ID of the model |
+| `dataset_id` | `str` | ID of the dataset |
+| `relationship_type` | `str` | Type of relationship (e.g., "trained_on", "evaluated_on") |
+
+#### `add_space_entity_relationship`
+
+```python
+add_space_entity_relationship(space_id, entity_id, entity_type, relationship_type="uses")
+```
+
+Add a relationship between a space and another entity.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `space_id` | `str` | ID of the space |
+| `entity_id` | `str` | ID of the related entity |
+| `entity_type` | `str` | Type of entity ("model" or "dataset") |
+| `relationship_type` | `str` | Type of relationship |
+
+#### `get_model_base_models`
+
+```python
+get_model_base_models(model_id)
+```
+
+Get base models for a given model.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `model_id` | `str` | ID of the model |
+
+#### `get_model_derived_models`
+
+```python
+get_model_derived_models(model_id)
+```
+
+Get models derived from a given model.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `model_id` | `str` | ID of the base model |
+
+#### `get_model_datasets`
+
+```python
+get_model_datasets(model_id, relationship_type=None)
+```
+
+Get datasets related to a model.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `model_id` | `str` | ID of the model |
+| `relationship_type` | `str` or `None` | Type of relationship to filter by (optional) |
+
+#### `extract_relationships_from_metadata`
+
+```python
+extract_relationships_from_metadata(metadata, entity_id, entity_type)
+```
+
+Extract and store relationships from entity metadata.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `metadata` | `dict` | Entity metadata dictionary |
+| `entity_id` | `str` | ID of the entity |
+| `entity_type` | `str` | Type of entity ("model", "dataset", or "space") |
+
+#### `generate_provenance_graph`
+
+```python
+generate_provenance_graph(output_file)
+```
+
+Generate a graph representation of provenance relationships.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `output_file` | `str` | Path to save the graph data |
+
+### Example
+
+```python
+from ipfs_huggingface_scraper_py import ProvenanceTracker
+
+# Initialize tracker
+tracker = ProvenanceTracker("./provenance_data")
+
+# Add relationships
+tracker.add_model_base_relationship(
+    "distilbert-base-uncased-finetuned-sst-2-english", 
+    "distilbert-base-uncased"
+)
+
+tracker.add_model_dataset_relationship(
+    "distilbert-base-uncased-finetuned-sst-2-english", 
+    "sst-2", 
+    "trained_on"
+)
+
+# Extract relationships from metadata
+metadata = {"modelId": "bert-base-uncased", "tags": ["dataset:squad"]}
+tracker.extract_relationships_from_metadata(metadata, "bert-large-squad", "model")
+
+# Generate graph
+tracker.generate_provenance_graph("provenance_network.json")
+```
+
+### UnifiedExport
+
+Manages export of scraped entity data to Parquet files.
+
+```python
+from ipfs_huggingface_scraper_py import UnifiedExport
+```
+
+#### Constructor
+
+```python
+UnifiedExport(config=None)
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `config` | `dict` or `None` | Configuration dictionary with export settings |
+
+#### Methods
+
+##### `normalize_schema`
+
+```python
+normalize_schema(entity_list, entity_type)
+```
+
+Normalize schema across different entity types to ensure consistency.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `entity_list` | `list` | List of entity metadata dictionaries |
+| `entity_type` | `str` | Type of entity ('model', 'dataset', or 'space') |
+
+##### `save_dataframe_to_parquet_safely`
+
+```python
+save_dataframe_to_parquet_safely(df, filepath)
+```
+
+Saves DataFrame to Parquet with explicit schema handling for mixed types.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `df` | `pandas.DataFrame` | DataFrame to save |
+| `filepath` | `str` or `Path` | Path to save the Parquet file |
+
+##### `load_existing_data`
+
+```python
+load_existing_data(filepath)
+```
+
+Load existing data from a Parquet file with fallback to CSV.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `filepath` | `Path` | Path to the Parquet file |
+
+##### `store_entity_data`
+
+```python
+store_entity_data(entity_list, entity_type, output_path=None, merge_with_existing=True)
+```
+
+Store entity data as Parquet and add to IPFS if available.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `entity_list` | `list` | List of entity metadata dictionaries |
+| `entity_type` | `str` | Type of entity ('model', 'dataset', or 'space') |
+| `output_path` | `str` or `None` | Path to save the Parquet file (optional) |
+| `merge_with_existing` | `bool` | Whether to merge with existing data (if any) |
+
+##### `store_unified_data`
+
+```python
+store_unified_data(models_list=None, datasets_list=None, spaces_list=None, output_path=None)
+```
+
+Store all entity types in a unified Parquet file.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `models_list` | `list` or `None` | List of model metadata dictionaries (optional) |
+| `datasets_list` | `list` or `None` | List of dataset metadata dictionaries (optional) |
+| `spaces_list` | `list` or `None` | List of space metadata dictionaries (optional) |
+| `output_path` | `str` or `None` | Path to save the unified Parquet file (optional) |
+
+##### `get_entity_statistics`
+
+```python
+get_entity_statistics(filepath=None)
+```
+
+Get statistics about the stored entity data.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `filepath` | `str` or `None` | Path to the Parquet file (optional, uses default if not provided) |
+
+#### Example
+
+```python
+from ipfs_huggingface_scraper_py import UnifiedExport
+import json
+import os
+
+# Initialize the exporter
+exporter = UnifiedExport({
+    "data_dir": "./data",
+    "use_ipfs": True  # Enable IPFS integration
+})
+
+# Load metadata from scraped data
+def load_entity_metadata(base_dir, entity_type):
+    entity_list = []
+    entity_dir = os.path.join(base_dir, entity_type)
+    
+    for entity_name in os.listdir(entity_dir):
+        metadata_path = os.path.join(entity_dir, entity_name, "metadata.json")
+        if os.path.exists(metadata_path):
+            with open(metadata_path, 'r') as f:
+                metadata = json.load(f)
+                entity_list.append(metadata)
+    
+    return entity_list
+
+# Load data for each entity type
+scraped_dir = "./hf_data"
+models_data = load_entity_metadata(scraped_dir, "models")
+datasets_data = load_entity_metadata(scraped_dir, "datasets")
+spaces_data = load_entity_metadata(scraped_dir, "spaces")
+
+# Export to unified Parquet file
+output_path, cid = exporter.store_unified_data(
+    models_list=models_data,
+    datasets_list=datasets_data,
+    spaces_list=spaces_data
+)
+
+print(f"Exported data to: {output_path}")
+if cid:
+    print(f"Added to IPFS with CID: {cid}")
+
+# Or export each entity type separately
+models_path, _ = exporter.store_entity_data(models_data, 'model')
+datasets_path, _ = exporter.store_entity_data(datasets_data, 'dataset')
+spaces_path, _ = exporter.store_entity_data(spaces_data, 'space')
+
+# Get statistics about the exported data
+stats = exporter.get_entity_statistics(output_path)
+print(f"Total entities: {stats['total_entities']}")
+print(f"Entity types: {stats['entity_types']}")
+```
+
 ## Command Line Interface
 
 The IPFS HuggingFace Scraper provides a command-line interface for common operations.
@@ -712,78 +1135,145 @@ The IPFS HuggingFace Scraper provides a command-line interface for common operat
 | Option | Description |
 |--------|-------------|
 | `--log-level` | Set logging level (DEBUG, INFO, WARNING, ERROR). Default: INFO |
+| `--config` | Path to configuration file |
 
 ### Commands
 
-#### `init`
+#### `export-config`
 
-Initialize a new configuration file.
+Export a configuration template.
 
 ```bash
-hf-scraper init --output CONFIG_PATH
+hf-scraper export-config --output CONFIG_PATH
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--output` | Path to save the configuration template. Default: config.toml |
+| `--output` | Path to save the configuration template. Required. |
 
-#### `scrape`
+#### `models`
 
 Scrape models from HuggingFace Hub.
 
 ```bash
-hf-scraper scrape [--config CONFIG_PATH] [--max-models MAX] [--output-dir DIR] [--api-token TOKEN]
+hf-scraper models [--max MAX] [--output-dir DIR] [--resume] [--token TOKEN]
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--config` | Path to configuration file |
-| `--max-models` | Maximum number of models to scrape |
+| `--max` | Maximum number of models to scrape |
 | `--output-dir` | Directory to save scraped data |
-| `--api-token` | HuggingFace API token |
+| `--resume` | Resume a paused scraping operation |
+| `--token` | HuggingFace API token |
 
-#### `resume`
+#### `datasets`
 
-Resume a paused scraping operation.
+Scrape datasets from HuggingFace Hub.
 
 ```bash
-hf-scraper resume [--config CONFIG_PATH]
+hf-scraper datasets [--max MAX] [--output-dir DIR] [--resume] [--token TOKEN]
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--config` | Path to configuration file |
+| `--max` | Maximum number of datasets to scrape |
+| `--output-dir` | Directory to save scraped data |
+| `--resume` | Resume a paused scraping operation |
+| `--token` | HuggingFace API token |
 
-#### `status`
+#### `spaces`
 
-Show status of scraping operation.
+Scrape spaces from HuggingFace Hub.
 
 ```bash
-hf-scraper status [--config CONFIG_PATH]
+hf-scraper spaces [--max MAX] [--output-dir DIR] [--resume] [--token TOKEN]
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--config` | Path to configuration file |
+| `--max` | Maximum number of spaces to scrape |
+| `--output-dir` | Directory to save scraped data |
+| `--resume` | Resume a paused scraping operation |
+| `--token` | HuggingFace API token |
+
+#### `all`
+
+Scrape models, datasets, and spaces from HuggingFace Hub.
+
+```bash
+hf-scraper all [--max-models MAX] [--max-datasets MAX] [--max-spaces MAX] [--output-dir DIR] [--token TOKEN]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--max-models` | Maximum number of models to scrape |
+| `--max-datasets` | Maximum number of datasets to scrape |
+| `--max-spaces` | Maximum number of spaces to scrape |
+| `--output-dir` | Base directory to save entities |
+| `--token` | HuggingFace API token |
+
+#### `export`
+
+Export scraped data to a Parquet file.
+
+```bash
+hf-scraper export --input-dir DIR [--output-file FILE] [--entity-types TYPES] [--separate-files]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--input-dir` | Directory containing scraped data. Required. |
+| `--output-file` | Output Parquet file path (default: in data directory) |
+| `--entity-types` | Entity types to include in the export (default: all) |
+| `--separate-files` | Export each entity type to a separate file |
 
 ### Examples
 
 ```bash
-# Initialize a configuration file
-hf-scraper init --output my_config.toml
+# Export a configuration template
+hf-scraper export-config --output my_config.toml
 
-# Start scraping with max 100 models
-hf-scraper scrape --config my_config.toml --max-models 100
+# Scrape models
+hf-scraper models --max 100 --output-dir ./hf_data
 
-# Use API token
-hf-scraper scrape --api-token "hf_xxxxxxxxxxx"
+# Scrape datasets
+hf-scraper datasets --max 50 --output-dir ./hf_data
+
+# Scrape spaces
+hf-scraper spaces --max 25 --output-dir ./hf_data
+
+# Scrape all entity types
+hf-scraper all --max-models 100 --max-datasets 50 --max-spaces 25 --output-dir ./hf_data
+
+# Use authentication
+HF_API_TOKEN="your_token" hf-scraper models --max 100
 
 # Resume a paused operation
-hf-scraper resume --config my_config.toml
-
-# Check status
-hf-scraper status --config my_config.toml
+hf-scraper models --resume --config my_config.toml
 
 # Set logging level
-hf-scraper scrape --config my_config.toml --log-level DEBUG
+hf-scraper models --max 100 --log-level DEBUG
+
+# Export scraped data to a unified Parquet file
+hf-scraper export --input-dir ./hf_data
+
+# Export only models and datasets to separate files
+hf-scraper export --input-dir ./hf_data --entity-types models datasets --separate-files
+
+# Export to a specific output file
+hf-scraper export --input-dir ./hf_data --output-file ./data/custom_export.parquet
 ```
+
+### Environment Variables
+
+The following environment variables can be used to configure the CLI:
+
+| Variable | Description |
+|----------|-------------|
+| `HF_API_TOKEN` | HuggingFace API token for authenticated requests |
+| `HF_OUTPUT_DIR` | Directory to save scraped data |
+| `HF_MAX_MODELS` | Maximum number of models to scrape |
+| `HF_MAX_DATASETS` | Maximum number of datasets to scrape |
+| `HF_MAX_SPACES` | Maximum number of spaces to scrape |
+| `HF_LOG_LEVEL` | Logging level (INFO, DEBUG, WARNING, ERROR) |
+| `HF_ENTITY_TYPES` | Comma-separated list of entity types to scrape (models,datasets,spaces) |

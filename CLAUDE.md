@@ -404,6 +404,36 @@ The scraper implements robust error handling and recovery:
    - Add webhook notifications for model updates
    - Implement subscriptions for model changes
 
+### Phase 4: Expanding Hugging Face Coverage (2-3 months)
+1. **Dataset Scraping Integration**
+   - Implement HuggingFace datasets API integration
+   - Create dataset discovery and listing capabilities
+   - Develop dataset metadata extraction systems
+   - Implement efficient storage for dataset previews
+   - Add dataset-specific search and filtering
+
+2. **Spaces Integration**
+   - Develop Hugging Face Spaces API client
+   - Create discovery mechanisms for Spaces
+   - Extract metadata from Space configurations
+   - Implement thumbnail and preview storage
+   - Develop linkage between models, datasets, and spaces
+
+3. **Cross-Entity Relationships**
+   - Build relationship graph between models, datasets, and spaces
+   - Create unified search across all entity types
+   - Implement cross-entity recommendation system
+   - Develop visualization for entity relationships
+   - Enable filtering based on cross-entity attributes
+
+4. **Provenance and Inheritance Tracking**
+   - Implement model lineage tracking (base models, fine-tuned versions)
+   - Track dataset derivation chains and version history
+   - Record space dependencies on models and datasets
+   - Create provenance metadata schema with inheritance relationships
+   - Implement provenance visualization tools
+   - Enable filtering/search based on provenance relationships
+
 ## Data Formats and Schemas
 
 ### Metadata Schema
@@ -440,10 +470,39 @@ The scraper implements robust error handling and recovery:
     "metric": "string",
     "value": "number"
   },
+  "provenance": {  // Provenance information
+    "base_model": "string",  // ID of the base model (if fine-tuned)
+    "parent_models": ["string"],  // IDs of parent models in the lineage
+    "derived_models": ["string"],  // IDs of known derivative models
+    "training_dataset": {  // Dataset used for training/fine-tuning
+      "dataset_id": "string",
+      "revision": "string",
+      "subset": "string"
+    },
+    "evaluation_datasets": [  // Datasets used for evaluation
+      {
+        "dataset_id": "string",
+        "revision": "string",
+        "subset": "string",
+        "metric": "string",
+        "score": "number"
+      }
+    ],
+    "version_history": [  // Version history
+      {
+        "version": "string",
+        "timestamp": "string",
+        "description": "string",
+        "cid": "string"  // IPFS CID for this version
+      }
+    ]
+  },
   "relationships": [  // Model relationships
     {
-      "relationship_type": "string",  // e.g., "base_model", "fine_tuned_from"
-      "target_model_id": "string"
+      "relationship_type": "string",  // e.g., "base_model", "fine_tuned_from", "used_by_space"
+      "target_id": "string",  // ID of the related entity
+      "target_type": "string",  // "model", "dataset", or "space"
+      "attributes": {}  // Additional relationship attributes
     }
   ],
   "embedding_vector": "bytes",  // Binary vector representation
@@ -453,22 +512,32 @@ The scraper implements robust error handling and recovery:
 
 ### Storage Organization
 1. **IPFS Structure**
-   - Each model gets a directory in IPFS
+   - Each entity (model, dataset, space) gets a directory in IPFS
    - Metadata stored as individual IPLD objects
    - Files stored with content addressing
    - Directory structure preserved in UnixFS
+   - Cross-entity relationships expressed through IPLD links
 
 2. **Parquet Schema**
    - Efficient columnar storage for metadata
-   - Partitioned by model categories
+   - Partitioned by entity type and categories
    - Optimized for filtering and search
    - Includes CID references to IPFS content
+   - Provenance relationships captured in specialized columns
 
 3. **Local Cache Structure**
-   - Organized by model ID for easy lookup
+   - Organized by entity type and ID for easy lookup
    - Contains original files and processed metadata
    - Implements eviction policies based on access frequency
    - Keeps track of what's already been uploaded to IPFS
+   - Maintains relationship indices for fast cross-entity lookups
+
+4. **Knowledge Graph Structure**
+   - Uses IPLD for storing entity relationships
+   - Captures provenance and lineage information
+   - Enables graph traversal for relationship discovery
+   - Optimized for relationship queries
+   - Maintains versioning for tracking relationship evolution
 
 ## Development Workflow
 
