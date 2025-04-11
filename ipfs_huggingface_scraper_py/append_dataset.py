@@ -54,35 +54,70 @@ def get_readme_content(repo_id, token=HF_TOKEN):
 
 
 def get_config_json(repo_id, token=HF_TOKEN):
-    """Downloads a model's config.json file and returns its content as a dictionary."""
+    """
+    Gets a model's configuration using the transformers AutoConfig class with
+    fallback to direct config.json download.
+    """
+    # First try using AutoConfig, which handles various model architectures
     try:
-        file_path = hf_hub_download(
-            repo_id=repo_id,
-            filename="config.json",
-            repo_type="model",
+        from transformers import AutoConfig
+
+        config = AutoConfig.from_pretrained(
+            repo_id,
             token=token,
-            library_name="hf_dataset_enhancer"
+            trust_remote_code=True,  # Enable for custom models
+            local_files_only=False
         )
+
+        # Convert to dictionary for JSON serialization
+        config_dict = config.to_dict()
+
+        # Add metadata about which approach was used
+        config_dict['_source'] = 'autoconfig'
+
+        logging.info(f"Successfully retrieved config for {repo_id} using AutoConfig")
+        return config_dict
+
+    except Exception as e:
+        logging.warning(f"AutoConfig failed for {repo_id}: {str(e)}")
+
+        # Fall back to direct file download approach
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = json.load(f)
-            return content
-        except json.JSONDecodeError:
-            logging.warning(f"Could not parse config.json for {repo_id} as valid JSON.")
-            return None
-        except UnicodeDecodeError:
-            logging.warning(f"Could not decode config.json for {repo_id} as UTF-8.")
+            file_path = hf_hub_download(
+                repo_id=repo_id,
+                filename="config.json",
+                repo_type="model",
+                token=token,
+                library_name="hf_dataset_enhancer"
+            )
+
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = json.load(f)
+
+                # Mark the source of this config
+                if isinstance(content, dict):
+                    content['_source'] = 'direct_download'
+
+                logging.info(f"Retrieved config.json directly for {repo_id}")
+                return content
+
+            except json.JSONDecodeError:
+                logging.warning(f"Could not parse config.json for {repo_id} as valid JSON.")
+                return None
+            except UnicodeDecodeError:
+                logging.warning(f"Could not decode config.json for {repo_id} as UTF-8.")
+                return None
+            except Exception as e:
+                logging.error(f"Error reading config.json for {repo_id}: {e}")
+                return None
+
+        except EntryNotFoundError:
+            logging.info(f"config.json not found in {repo_id}.")
             return None
         except Exception as e:
-            logging.error(f"Error reading config.json for {repo_id}: {e}")
+            logging.error(f"Error downloading config.json for {repo_id}: {e}")
             return None
-
-    except EntryNotFoundError:
-        logging.info(f"config.json not found in {repo_id}.")
-        return None
-    except Exception as e:
-        logging.error(f"Error downloading config.json for {repo_id}: {e}")
-        return None
 
 
 def enhance_dataset():
